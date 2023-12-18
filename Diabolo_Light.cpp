@@ -4,19 +4,19 @@
 
 using namespace Diabolo_Light;
 
-const static int DEBOUNCE_DELAY = 50; //ms
+const static unsigned int DEBOUNCE_DELAY = 50; //ms
 static unsigned long last_debounce_time = 0;
 
 // HIGH means the button is pressed and LOW means the button is released
 static int debounce_button_state;
 static int button_state; 
 
-static int num_modes;
-static int current_mode; // 0 is the off mode, 1-num_modes inclusive are user defined modes
+static unsigned int num_modes;
+static unsigned int current_mode; // 0 is the off mode, 1-num_modes inclusive are user defined modes
 
 static func_ptr on_wake_up;
-unsigned long wake_up_time;
-static int hold_time;
+static unsigned long wake_up_time;
+static unsigned int hold_time;
 
 /*!
     @brief   Shut down the ATtiny85 and disconnect the LEDs to save power
@@ -54,14 +54,14 @@ ISR(PCINT0_vect) {
 /*!
     @brief   Configure the diabolo light to read button input and save power.
              Call this in the setup function.
-    @param   num_modes  a nonnegative number which is the number of modes
-             the board should have not including the off mode
+    @param   num_modes  the number of modes the board should have
+             not including the off mode
     @param   hold_time  the amount of time in milliseconds the user has to
              hold the button in order for the board to turn on
     @param   on_wake_up an optional parameter for additional things the board
              should do when the button is pressed to wake up the board
 */
-void Diabolo_Light::begin(const int num_modes, const int hold_time, func_ptr on_wake_up) {
+void Diabolo_Light::begin(const unsigned int num_modes, const unsigned int hold_time, func_ptr on_wake_up) {
     ::num_modes = num_modes;
     ::hold_time = hold_time;
     ::on_wake_up = on_wake_up;
@@ -114,7 +114,7 @@ void Diabolo_Light::handle_button() {
              and 1-num_modes inclusive are user defined modes.
     @return  Current mode
 */
-int Diabolo_Light::get_current_mode() {
+unsigned int Diabolo_Light::get_current_mode() {
     return current_mode;
 }
 
@@ -122,7 +122,7 @@ int Diabolo_Light::get_current_mode() {
     @brief   Setter for current_mode. 0 is the off mode,
              and 1-num_modes inclusive are user defined modes.
 */
-void Diabolo_Light::set_current_mode(const int new_mode) {
+void Diabolo_Light::set_current_mode(const unsigned int new_mode) {
     current_mode = new_mode;
     
     if (current_mode == 0 && button_state == LOW) {
@@ -137,4 +137,14 @@ void Diabolo_Light::set_current_mode(const int new_mode) {
 */
 unsigned long Diabolo_Light::get_wake_up_time() {
     return wake_up_time;
+}
+
+/*!
+    @brief   Getter for button_state, which is HIGH if the button
+             is pressed and LOW if the button is released. This
+             updates after a 50ms delay to account for button debounce.
+    @return  button_state
+*/
+int Diabolo_Light::get_button_state() {
+    return button_state;
 }

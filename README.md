@@ -1,4 +1,4 @@
-# Diabolo Light Library Documentation
+# Diabolo Light Library
 
 ## Introduction
 
@@ -6,17 +6,18 @@ The Diabolo Light library provides a set of functions for managing button input 
 
 ## Installation
 
-Ensure that you have the Arduino IDE installed and set up for ATtiny85 development. Include the Diabolo Light library in your project by placing the library files in the Arduino `libraries` folder.
+1. In PlatformIO Home, navigate to Libraries and search "Diabolo Light".
+2. Click on the Diabolo Light library and press the Add to Project button.
+3. Select your project and click "Add".
+4. Use the library by including the Diabolo_Light.h file.
 
 ```cpp
-#include <Arduino.h>
-#include <avr/sleep.h>
 #include <Diabolo_Light.h>
 ```
 
 ## Constants
 
-- `DEBOUNCE_DELAY`: The debounce delay in milliseconds used for filtering button input.
+- `BUTTON_PIN`: The debounce delay in milliseconds used for filtering button input.
 
 ## Variables
 
