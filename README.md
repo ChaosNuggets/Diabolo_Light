@@ -17,7 +17,10 @@ The Diabolo Light library provides a set of functions for managing button input 
 
 ## Constants
 
-- `BUTTON_PIN`: The debounce delay in milliseconds used for filtering button input.
+- `const uint8_t BUTTON_PIN`: The ATtiny85 pin that the button is attached to.
+- `const uint8_t LED_PIN`: The ATtiny85 pin that the LEDs are attached to.
+- `const uint8_t MOSFET_PIN`: The ATtiny85 pin that the mosfet is attached to. ()
+- `const uint8_t BUTTON_PIN`: The ATtiny85 pin that the button is attached to.
 
 ## Variables
 

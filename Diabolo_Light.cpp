@@ -4,6 +4,9 @@
 
 using namespace Diabolo_Light;
 
+const uint8_t BUTTON_PIN = 2;
+const uint8_t MOSFET_PIN = 0;
+
 const static unsigned int DEBOUNCE_DELAY = 50; //ms
 static unsigned long last_debounce_time = 0;
 
