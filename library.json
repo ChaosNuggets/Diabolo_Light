@@ -22,17 +22,17 @@
         {
             "name": "Rainbow",
             "base": "examples/Rainbow",
-            "files": "main.cpp"
+            "files": ["main.cpp"]
         },
         {
             "name": "Multiple Modes",
             "base": "examples/Multiple-Modes",
-            "files": "main.cpp"
+            "files": ["main.cpp"]
         },
         {
             "name": "Demo Performance",
             "base": "examples/Demo-Performance",
-            "files": "main.cpp"
+            "files": ["main.cpp"]
         }
     ],
 	"dependencies": 
