@@ -7,7 +7,7 @@ The Diabolo Light library provides a set of functions for managing button input 
 ## Installation
 
 1. In PlatformIO Home, navigate to Libraries and search "Diabolo Light".
-2. Click on the Diabolo Light library and press the Add to Project button.
+2. Click on the Diabolo Light library and press the "Add to Project" button.
 3. Select your project and click "Add".
 4. Use the library by including the Diabolo_Light.h file.
 
@@ -60,20 +60,20 @@ Sets the current operating mode.
 - **Parameters:**
   - `new_mode`: The desired mode to set (`0` for off mode, `1-num_modes` for user-defined modes).
 
-### `unsigned long Diabolo_Light::get_wake_up_time()`
+### `unsigned long Diabolo_Light::awake_time()`
 
-Returns the time at which the button was pressed to wake the board up.
+Returns the amount of time the board has been awake in milliseconds.
 
 - **Returns:**
-  - `unsigned int`: The wake up time in milliseconds.
+  - `unsigned long`: The difference between the time at which the button was pressed to wake up the board and the current time in milliseconds.
 
 ### `int Diabolo_Light::get_button_state()`
 
 Returns the button state. The button state is HIGH if the button is pressed and LOW if the button is released. There is a 50ms delay between the time the button is pressed/released and the time button state updates to account for button debounce.
 
 - **Returns:**
-  - `unsigned int`: The button state
+  - `int`: The button state
 
 ## Examples
 
-There are multiple examples in the examples folder.
+There are multiple examples in the [examples folder](https://github.com/ChaosNuggets/Diabolo_Light/tree/main/examples).

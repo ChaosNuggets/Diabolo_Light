@@ -137,12 +137,12 @@ void Diabolo_Light::set_current_mode(const unsigned int new_mode) {
 }
 
 /*!
-    @brief   Getter for wake_up_time, the time in milliseconds
-             at which the button was pressed to wake up the board.
-    @return  wake_up_time
+    @brief   Returns the amount of time the board has been awake in milliseconds.
+    @return  The difference between the time at which the button was pressed
+             to wake up the board and the current time in milliseconds
 */
-unsigned long Diabolo_Light::get_wake_up_time() {
-    return wake_up_time;
+unsigned long Diabolo_Light::awake_time() {
+    return millis() - wake_up_time;
 }
 
 /*!

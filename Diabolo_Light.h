@@ -12,7 +12,7 @@ namespace Diabolo_Light {
     void handle_button();
     unsigned int get_current_mode();
     void set_current_mode(const unsigned int new_mode);
-    unsigned long get_wake_up_time();
+    unsigned long awake_time();
     int get_button_state();
 }
 
