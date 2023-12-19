@@ -1,0 +1,41 @@
+{
+    "name": "Diabolo Light",
+    "version": "1.0.0",
+    "description": "Makes programming my diabolo light less of a pain",
+    "keywords": "diabolo, chaosnuggets, diabolo light",
+    "repository":
+    {
+        "type": "git",
+        "url": "https://github.com/ChaosNuggets/Diabolo_Light.git"
+    },
+    "authors":
+    {
+        "name": "Stanley So",
+        "email": "chaosnuggets@gmail.com"
+    },
+    "license": "MIT",
+    "frameworks": "Arduino",
+    "platforms": "atmelavr",
+    "headers": "Diabolo_Light.h",
+    "examples":
+    [
+        {
+            "name": "Demo-Performance",
+            "base": "examples/Demo-Performance",
+            "files": "main.cpp"
+        },
+        {
+            "name": "Rainbow",
+            "base": "examples/Rainbow",
+            "files": "main.cpp"
+        }
+    ],
+	"dependencies": 
+    [
+        {
+            "owner": "Adafruit",
+            "name": "Adafruit NeoPixel",
+            "version": "*"
+        }
+    ]
+}
