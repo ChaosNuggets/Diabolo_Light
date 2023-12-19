@@ -4,8 +4,8 @@
 
 using namespace Diabolo_Light;
 
-const uint8_t BUTTON_PIN = 2;
-const uint8_t MOSFET_PIN = 0;
+const unsigned int BUTTON_PIN = 2;
+const unsigned int MOSFET_PIN = 0;
 
 const static unsigned int DEBOUNCE_DELAY = 50; //ms
 static unsigned long last_debounce_time = 0;
@@ -20,14 +20,13 @@ static unsigned int current_mode; // 0 is the off mode, 1-num_modes inclusive ar
 static func_ptr on_wake_up;
 static unsigned long wake_up_time;
 static unsigned int hold_time;
+static bool has_just_woken_up; // If this is true, the user needs to hold the button for the mode to increment
 
 /*!
     @brief   Shut down the ATtiny85 and disconnect the LEDs to save power
 */
 static void shut_down() {
-    digitalWrite(MOSFET_PIN, LOW); // Disconnect the LEDs
-    // TODO: delete the following line after you get new boards
-    digitalWrite(LED_PIN, HIGH); // Make it so then ESD protection doesn't get in the way of reducing power
+    digitalWrite(MOSFET_PIN, HIGH); // Disconnect the LEDs
     GIMSK |= 1 << PCIE; // enable pin change interrupt
     PCMSK |= 1 << PCINT2; // turns on PCINT2 as interrupt pin
     set_sleep_mode(SLEEP_MODE_PWR_DOWN);
@@ -42,10 +41,10 @@ static void shut_down() {
              board back on.
 */
 ISR(PCINT0_vect) {
-    digitalWrite(MOSFET_PIN, HIGH); // Connect the LEDs
     last_debounce_time = millis();
     wake_up_time = millis();
     button_state = HIGH;
+    has_just_woken_up = true;
 
     cli(); // disable interrupts
     PCMSK &= ~(1 << PCINT2); // turns of PCINT2 as interrupt pin
@@ -74,11 +73,12 @@ void Diabolo_Light::begin(const unsigned int num_modes, const unsigned int hold_
     ACSR |= 1 << ACD; // Disable analog comparator
 
     pinMode(MOSFET_PIN, OUTPUT);
-    digitalWrite(MOSFET_PIN, HIGH); // TODO: change this to low when I get the new boards with pmosfets
+    digitalWrite(MOSFET_PIN, LOW); // Connect the LEDs
 
     pinMode(BUTTON_PIN, INPUT);
     debounce_button_state = digitalRead(BUTTON_PIN); // Set DBS to the reading so we can skip the debounce code on startup
     button_state = HIGH; // Set it to high so then the shut down command inside handle_button runs on startup if the button is low
+    has_just_woken_up = false; // Set it to false because we want the board to sleep right away
 
     current_mode = 0; // Set the board to shut down mode
 }
@@ -89,8 +89,10 @@ void Diabolo_Light::begin(const unsigned int num_modes, const unsigned int hold_
              non-blocking or else current_mode will not update.
 */
 void Diabolo_Light::handle_button() {
-    if (current_mode == 0 && millis() - wake_up_time >= hold_time) {
+    if (has_just_woken_up && millis() - wake_up_time >= hold_time) {
+        has_just_woken_up = false;
         current_mode = current_mode >= num_modes ? 0 : current_mode + 1;
+        digitalWrite(MOSFET_PIN, LOW); // Connect the LEDs
     }
 
     int reading = digitalRead(BUTTON_PIN);
@@ -102,9 +104,9 @@ void Diabolo_Light::handle_button() {
     if ((millis() - last_debounce_time) > DEBOUNCE_DELAY && reading != button_state) {
         button_state = reading;
 
-        if (current_mode != 0 && button_state == HIGH) {
+        if (button_state == HIGH) {
             current_mode = current_mode >= num_modes ? 0 : current_mode + 1;
-        } 
+        }
 
         if (current_mode == 0 && button_state == LOW) {
             shut_down();
