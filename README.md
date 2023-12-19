@@ -17,8 +17,19 @@ The Diabolo Light library provides a set of functions for managing button input 
 
 ## Constants
 
-- `const uint8_t LED_PIN`: The ATtiny85 pin that the LEDs are attached to.
-- `const uint8_t NUM_LEDS`: The number of leds that are on the board
+- `const unsigned int Diabolo_Light::LED_PIN`: The ATtiny85 pin that the LEDs are attached to.
+- `const unsigned int Diabolo_Light::NUM_LEDS`: The number of leds that are on the board
+- `const unsigned int Diabolo_Light::LED_TYPE`: The type of neopixel the diabolo lights use.
+
+Use these constants to initialize your Adafruit_Neopixel object.
+
+```cpp
+#include <Diabolo_Light.h>
+
+using namespace Diabolo_Light;
+
+Adafruit_Neopixel(LED_PIN, NUM_LEDS, LED_TYPE);
+```
 
 ## Variables
 

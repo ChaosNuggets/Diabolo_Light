@@ -17,7 +17,7 @@ static int button_state;
 static unsigned int num_modes;
 static unsigned int current_mode; // 0 is the off mode, 1-num_modes inclusive are user defined modes
 
-static func_ptr on_wake_up;
+static void (*on_wake_up)();
 static unsigned long wake_up_time;
 static unsigned int hold_time;
 static bool has_just_woken_up; // If this is true, the user needs to hold the button for the mode to increment
@@ -59,11 +59,12 @@ ISR(PCINT0_vect) {
     @param   num_modes  the number of modes the board should have
              not including the off mode
     @param   hold_time  the amount of time in milliseconds the user has to
-             hold the button in order for the board to turn on
-    @param   on_wake_up an optional parameter for additional things the board
-             should do when the button is pressed to wake up the board
+             hold the button in order for the board to turn on. Defaults to
+             500ms.
+    @param   on_wake_up additional things the board should do when the button
+             is pressed to wake up the board. Defaults to doing nothing.
 */
-void Diabolo_Light::begin(const unsigned int num_modes, const unsigned int hold_time, func_ptr on_wake_up) {
+void Diabolo_Light::begin(const unsigned int num_modes, const unsigned int hold_time, void (*on_wake_up)()) {
     ::num_modes = num_modes;
     ::hold_time = hold_time;
     ::on_wake_up = on_wake_up;
