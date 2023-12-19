@@ -21,49 +21,59 @@ The Diabolo Light library provides a set of functions for managing button input 
 - `const unsigned int Diabolo_Light::NUM_LEDS`: The number of leds that are on the board
 - `const unsigned int Diabolo_Light::LED_TYPE`: The type of neopixel the diabolo lights use.
 
-Use these constants to initialize your Adafruit_Neopixel object.
+Use these constants to initialize your [Adafruit_Neopixel](https://github.com/adafruit/Adafruit_NeoPixel) object.
 
 ```cpp
 #include <Diabolo_Light.h>
 
 using namespace Diabolo_Light;
 
-Adafruit_Neopixel(LED_PIN, NUM_LEDS, LED_TYPE);
+Adafruit_Neopixel pixels(LED_PIN, NUM_LEDS, LED_TYPE);
 ```
-
-## Variables
-
-- `last_debounce_time`: Holds the timestamp of the last button debounce.
-- `debounce_button_state`: Stores the debounced state of the button.
-- `button_state`: Represents the current state of the button (HIGH for pressed, LOW for released).
-- `num_modes`: The number of user-defined modes (excluding the off mode).
-- `current_mode`: The current operating mode (0 for off mode, 1-num_modes for user-defined modes).
-- `on_wake_up`: A function pointer to an optional callback executed when the board wakes up from sleep mode.
 
 ## Functions
 
-### `void Diabolo_Light::begin(const int num_modes, func_ptr on_wake_up)`
+### `void Diabolo_Light::begin(const unsigned int num_modes, const unsigned int hold_time = 500, void (*on_wake_up)() = [](){})`
 
 Configures the diabolo light to read button input and save power. This function should be called in the setup function.
 
 - **Parameters:**
   - `num_modes`: The number of user-defined modes (excluding the off mode).
-  - `on_wake_up`: An optional callback function to be executed when the board wakes up from sleep mode.
+  - `hold_time`: How long the user has to hold the button for in order for the board to turn on. Defaults to 500ms.
+  - `on_wake_up`: An optional callback function to be executed when the board wakes up from sleep mode. Defaults to doing nothing.
 
 ### `void Diabolo_Light::handle_button()`
 
-Reads button input and changes the `current_mode` if necessary. This function should be called in the loop function. Ensure your loop function is non-blocking to allow `current_mode` to update correctly.
+Reads button input and changes the `current_mode` if necessary. Also shuts down the board if `current_mode` == 0. This function should be called in the loop function. Ensure your loop function is non-blocking to allow `current_mode` to update correctly.
 
-### `int Diabolo_Light::get_current_mode()`
+### `unsigned int Diabolo_Light::get_current_mode()`
 
 Returns the current operating mode.
 
 - **Returns:**
-  - `int`: The current mode (0 for off mode, 1-num_modes for user-defined modes).
+  - `unsigned int`: The current mode (0 for off mode, 1-num_modes for user-defined modes).
 
-### `void Diabolo_Light::set_current_mode(const int new_mode)`
+### `void Diabolo_Light::set_current_mode(const unsigned int new_mode)`
 
 Sets the current operating mode.
 
 - **Parameters:**
   - `new_mode`: The desired mode to set (`0` for off mode, `1-num_modes` for user-defined modes).
+
+### `unsigned long Diabolo_Light::get_wake_up_time()`
+
+Returns the time at which the button was pressed to wake the board up.
+
+- **Returns:**
+  - `unsigned int`: The wake up time in milliseconds.
+
+### `int Diabolo_Light::get_button_state()`
+
+Returns the button state. The button state is HIGH if the button is pressed and LOW if the button is released. There is a 50ms delay between the time the button is pressed/released and the time button state updates to account for button debounce.
+
+- **Returns:**
+  - `unsigned int`: The button state
+
+## Examples
+
+There are multiple examples in the examples folder.
