@@ -1,6 +1,6 @@
 {
     "name": "Diabolo Light",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Makes programming my diabolo lights less of a pain",
     "keywords": "diabolo, chaosnuggets, diabolo light, diabolo lights",
     "repository":
@@ -22,17 +22,17 @@
         {
             "name": "Rainbow",
             "base": "examples/Rainbow",
-            "files": ["main.cpp"]
+            "files": ["rainbow.cpp"]
         },
         {
             "name": "Multiple Modes",
             "base": "examples/Multiple-Modes",
-            "files": ["main.cpp"]
+            "files": ["multiple_modes.cpp"]
         },
         {
             "name": "Demo Performance",
             "base": "examples/Demo-Performance",
-            "files": ["main.cpp"]
+            "files": ["demo_performance.cpp"]
         }
     ],
 	"dependencies": 
