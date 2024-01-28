@@ -9,6 +9,7 @@ const unsigned int MOSFET_PIN = 0;
 
 const static unsigned int DEBOUNCE_DELAY = 50; //ms
 static unsigned long last_debounce_time = 0;
+static unsigned long press_start_time = 0;
 
 // HIGH means the button is pressed and LOW means the button is released
 static int debounce_button_state;
@@ -22,6 +23,7 @@ static unsigned int current_mode; // 0 is the off mode, 1-num_modes inclusive ar
 static void (*on_wake_up)();
 static unsigned long wake_up_time;
 static unsigned int begin_hold_time;
+static unsigned int end_hold_time;
 static bool has_just_woken_up; // If this is true, the user needs to hold the button for the mode to increment
 
 /*!
@@ -63,12 +65,16 @@ ISR(PCINT0_vect) {
     @param   begin_hold_time  the amount of time in milliseconds the user has to
              hold the button in order for the board to turn on. Defaults to
              500ms.
+    @param   end_hold_time  the amount of time in milliseconds the user has to
+             hold the button in order for the board to turn off. Defaults to
+             2000ms.
     @param   on_wake_up additional things the board should do when the button
              is pressed to wake up the board. Defaults to doing nothing.
 */
-void Diabolo_Light::begin(const unsigned int num_modes, const unsigned int begin_hold_time, void (*on_wake_up)()) {
+void Diabolo_Light::begin(const unsigned int num_modes, const unsigned int begin_hold_time, const unsigned int end_hold_time, void (*on_wake_up)()) {
     ::num_modes = num_modes;
     ::begin_hold_time = begin_hold_time;
+    ::end_hold_time = end_hold_time;
     ::on_wake_up = on_wake_up;
 
     ADCSRA &= ~(1 << ADEN); // Disable ADC
@@ -110,6 +116,11 @@ void Diabolo_Light::handle_button() {
         prev_button_state = button_state;
         button_state = reading;
 
+        // Button pressed
+        if (prev_button_state == LOW && button_state == HIGH) {
+            press_start_time = millis();
+        }
+
         // Button released
         if (prev_button_state == HIGH && button_state == LOW) {
             // Mode 1 is turned on during the first press down, so ignore the release that follows.
@@ -119,6 +130,13 @@ void Diabolo_Light::handle_button() {
             else {
                 current_mode = current_mode >= num_modes ? 0 : current_mode + 1;
             }
+        }
+
+        // If button is held for long enough, shut down on release.
+        if ((millis() - press_start_time) > end_hold_time) {
+            current_mode = 0;
+            // TODO: shut down without requiring release. Not sure how to do that.
+            // Calling shut_down() alone doesn't seem to work.
         }
 
         if (current_mode == 0 && button_state == LOW) {
