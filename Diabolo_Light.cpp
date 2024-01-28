@@ -12,7 +12,9 @@ static unsigned long last_debounce_time = 0;
 
 // HIGH means the button is pressed and LOW means the button is released
 static int debounce_button_state;
+static int prev_button_state;
 static int button_state; 
+static int first_press;
 
 static unsigned int num_modes;
 static unsigned int current_mode; // 0 is the off mode, 1-num_modes inclusive are user defined modes
@@ -43,7 +45,7 @@ static void shut_down() {
 ISR(PCINT0_vect) {
     last_debounce_time = millis();
     wake_up_time = millis();
-    button_state = HIGH;
+    button_state = LOW;
     has_just_woken_up = true;
 
     cli(); // disable interrupts
@@ -78,8 +80,9 @@ void Diabolo_Light::begin(const unsigned int num_modes, const unsigned int hold_
 
     pinMode(BUTTON_PIN, INPUT);
     debounce_button_state = digitalRead(BUTTON_PIN); // Set DBS to the reading so we can skip the debounce code on startup
-    button_state = HIGH; // Set it to high so then the shut down command inside handle_button runs on startup if the button is low
+    button_state = LOW; // Set it to high so then the shut down command inside handle_button runs on startup if the button is low
     has_just_woken_up = false; // Set it to false because we want the board to sleep right away
+    first_press = true;
 
     current_mode = 0; // Set the board to shut down mode
 }
@@ -92,6 +95,7 @@ void Diabolo_Light::begin(const unsigned int num_modes, const unsigned int hold_
 void Diabolo_Light::handle_button() {
     if (has_just_woken_up && awake_time() >= hold_time) {
         has_just_woken_up = false;
+        first_press = true;
         current_mode = current_mode >= num_modes ? 0 : current_mode + 1;
         digitalWrite(MOSFET_PIN, LOW); // Connect the LEDs
     }
@@ -103,10 +107,18 @@ void Diabolo_Light::handle_button() {
     }
 
     if ((millis() - last_debounce_time) > DEBOUNCE_DELAY && reading != button_state) {
+        prev_button_state = button_state;
         button_state = reading;
 
-        if (button_state == HIGH) {
-            current_mode = current_mode >= num_modes ? 0 : current_mode + 1;
+        // Button released
+        if (prev_button_state == HIGH && button_state == LOW) {
+            // Mode 1 is turned on during the first press down, so ignore the release that follows.
+            if (first_press) {
+                first_press = false;
+            }
+            else {
+                current_mode = current_mode >= num_modes ? 0 : current_mode + 1;
+            }
         }
 
         if (current_mode == 0 && button_state == LOW) {
