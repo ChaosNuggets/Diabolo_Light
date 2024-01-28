@@ -90,7 +90,7 @@ void Diabolo_Light::begin(const unsigned int num_modes, const unsigned int hold_
              non-blocking or else current_mode will not update.
 */
 void Diabolo_Light::handle_button() {
-    if (has_just_woken_up && millis() - wake_up_time >= hold_time) {
+    if (has_just_woken_up && awake_time() >= hold_time) {
         has_just_woken_up = false;
         current_mode = current_mode >= num_modes ? 0 : current_mode + 1;
         digitalWrite(MOSFET_PIN, LOW); // Connect the LEDs
