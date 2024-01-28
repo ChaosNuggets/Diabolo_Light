@@ -21,7 +21,7 @@ static unsigned int current_mode; // 0 is the off mode, 1-num_modes inclusive ar
 
 static void (*on_wake_up)();
 static unsigned long wake_up_time;
-static unsigned int hold_time;
+static unsigned int begin_hold_time;
 static bool has_just_woken_up; // If this is true, the user needs to hold the button for the mode to increment
 
 /*!
@@ -60,15 +60,15 @@ ISR(PCINT0_vect) {
              Call this in the setup function.
     @param   num_modes  the number of modes the board should have
              not including the off mode
-    @param   hold_time  the amount of time in milliseconds the user has to
+    @param   begin_hold_time  the amount of time in milliseconds the user has to
              hold the button in order for the board to turn on. Defaults to
              500ms.
     @param   on_wake_up additional things the board should do when the button
              is pressed to wake up the board. Defaults to doing nothing.
 */
-void Diabolo_Light::begin(const unsigned int num_modes, const unsigned int hold_time, void (*on_wake_up)()) {
+void Diabolo_Light::begin(const unsigned int num_modes, const unsigned int begin_hold_time, void (*on_wake_up)()) {
     ::num_modes = num_modes;
-    ::hold_time = hold_time;
+    ::begin_hold_time = begin_hold_time;
     ::on_wake_up = on_wake_up;
 
     ADCSRA &= ~(1 << ADEN); // Disable ADC
@@ -93,7 +93,7 @@ void Diabolo_Light::begin(const unsigned int num_modes, const unsigned int hold_
              non-blocking or else current_mode will not update.
 */
 void Diabolo_Light::handle_button() {
-    if (has_just_woken_up && awake_time() >= hold_time) {
+    if (has_just_woken_up && awake_time() >= begin_hold_time) {
         has_just_woken_up = false;
         first_press = true;
         current_mode = current_mode >= num_modes ? 0 : current_mode + 1;
