@@ -9,8 +9,8 @@ const unsigned int MOSFET_PIN = 0;
 
 // HIGH means the button is pressed, LOW means the button is released, and
 // UNSTABLE means the button hasn't been held down / let go for long enough
-static int prev_button_state;
-static int button_state;
+static volatile int prev_button_state;
+static volatile int button_state;
 
 static unsigned int num_modes;
 static unsigned int current_mode; // 0 is the off mode, 1-num_modes inclusive are user defined modes
@@ -111,11 +111,9 @@ void Diabolo_Light::begin(const unsigned int num_modes, const unsigned int hold_
 
 /*!
     @brief   Read button input and change current_mode if necessary.
-             Call this in the loop function. Make your loop function
-             non-blocking or else current_mode will not update.
+             Runs once every 5ms.
 */
-void Diabolo_Light::handle_button() {
-    // TODO: change this to a timer based interrupt that runs every 1ms
+ISR(TIMER0_COMPA_vect) {
     // Read button state and shift a bit into the button history
     // If all ones, button state = HIGH,
     // If all zeros, button state = LOW,
