@@ -46,11 +46,31 @@ ISR(PCINT0_vect) {
     button_state = HIGH;
     has_just_woken_up = true;
 
-    cli(); // disable interrupts
-    PCMSK &= ~(1 << PCINT2); // turns of PCINT2 as interrupt pin
+    PCMSK &= ~(1 << PCINT2); // turns off PCINT2 as interrupt pin
     sleep_disable(); // clear sleep enable bit
 
     on_wake_up();
+}
+
+/*!
+    @brief   Sets the button interrupt to run once every 5ms.
+             Since button_history is 8 bits, the button will
+             have to be stable for 40ms in order for
+             button_state to be HIGH or LOW.
+*/
+void button_interrupt_setup()
+{
+    TCCR0A = 0x00; // Normal mode
+    TCCR0A |= 1<<WGM01 // Clear timer on compare match mode
+
+    TCCR0B = 0x00; // Clear TCCR0B
+    TCCR0B |= (1<<CS02)|(1<<CS00); // Prescale with 1024
+
+    OCR0A = 38 // Set counter to match once every 4.992ms (1024*(1+38))/8MHz = 4.992ms
+
+    sei(); // Enable global interrupt
+    TCNT0 = 0; // Clear the counter
+    TIMSK |= (1<<OCIE0A); // Enable timer0 interrupt when counter matches OCR0A
 }
 
 /*!
@@ -85,12 +105,24 @@ void Diabolo_Light::begin(const unsigned int num_modes, const unsigned int hold_
 }
 
 /*!
+    @brief   Legacy function that used to read button input and
+             change current_mode if necessary. Now this function
+             does nothing.
+*/
+//void Diabolo_Light::handle_button() {}
+
+/*!
     @brief   Read button input and change current_mode if necessary.
              Call this in the loop function. Make your loop function
              non-blocking or else current_mode will not update.
 */
 void Diabolo_Light::handle_button() {
-    if (has_just_woken_up && millis() - wake_up_time >= hold_time) {
+    // TODO: change this to a timer based interrupt that runs every 1ms
+    // Read button state and shift a bit into the button history
+    // If all ones, button state = HIGH,
+    // If all zeros, button state = LOW,
+    // Otherwise button state = UNSTABLE
+    if (has_just_woken_up && awake_time() >= hold_time) {
         has_just_woken_up = false;
         current_mode = current_mode >= num_modes ? 0 : current_mode + 1;
         digitalWrite(MOSFET_PIN, LOW); // Connect the LEDs
