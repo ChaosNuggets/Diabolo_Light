@@ -12,12 +12,20 @@ const unsigned int MOSFET_PIN = 0;
 static volatile int prev_button_state;
 static volatile int button_state;
 
+// A series of bits, 1 means the reading was HIGH and 0 means the reading was LOW. Rightmost bit is the most recent.
+static volatile uint8_t button_history;
+
 static unsigned int num_modes;
 static unsigned int current_mode; // 0 is the off mode, 1-num_modes inclusive are user defined modes
 
 static void (*on_wake_up)();
 static unsigned long wake_up_time;
-static unsigned int hold_time;
+static unsigned long holding_start_time; // The time at which the user starts holding the button
+
+// "Constants" initialized in begin() that specify the time the user has to hold the button to turn the lights on/off.
+static unsigned int time_to_turn_on;
+static unsigned int time_to_turn_off;
+
 static bool has_just_woken_up; // If this is true, the user needs to hold the button for the mode to increment to 1
 
 /*!
@@ -103,11 +111,11 @@ void Diabolo_Light::begin(const unsigned int num_modes, const unsigned int hold_
 }
 
 /*!
-    @brief   Legacy function that used to read button input and
-             change current_mode if necessary. Now this function
-             does nothing.
+    @brief   Legacy function that used to read button input and change
+             current_mode if necessary. Now this function does nothing. It's
+             just here so code using previous versions of this library doesn't break.
 */
-//void Diabolo_Light::handle_button() {}
+void Diabolo_Light::handle_button() {}
 
 /*!
     @brief   Read button input and change current_mode if necessary.
@@ -115,27 +123,41 @@ void Diabolo_Light::begin(const unsigned int num_modes, const unsigned int hold_
 */
 ISR(TIMER0_COMPA_vect) {
     // Read button state and shift a bit into the button history
+    button_history = (button_history<<1) | digitalRead(BUTTON_PIN);
+
     // If all ones, button state = HIGH,
     // If all zeros, button state = LOW,
     // Otherwise button state = UNSTABLE
+    if (~button_history == 0x0) {
+        button_state = HIGH;
+    } else if (button_history == 0x0) {
+        button_state = LOW;
+    } else {
+        button_state = UNSTABLE;
+        // Reset holding_start_time so it basically acts like the button has been held for 0 time
+        holding_start_time = millis(); 
+    }
 
-    if (has_just_woken_up && awake_time() >= hold_time) {
+    // Connect the LEDs if the user has held down the button for long enough
+    if (has_just_woken_up && button_state == HIGH && millis() - holding_start_time >= time_to_turn_on) {
         has_just_woken_up = false;
-        current_mode = current_mode >= num_modes ? 0 : current_mode + 1;
+        set_current_mode(current_mode >= num_modes ? 0 : current_mode + 1);
         digitalWrite(MOSFET_PIN, LOW); // Connect the LEDs
     }
-
-    int reading = digitalRead(BUTTON_PIN);
-    if (reading != debounce_button_state) {
-        last_debounce_time = millis();
-        debounce_button_state = reading;
+    
+    // Ty Victor Lin for this ideaa (shut down on long press)
+    if (button_state == HIGH && millis() - holding_start_time >= time_to_turn_off) {
+        set_current_mode(0);
     }
 
-    if ((millis() - last_debounce_time) > DEBOUNCE_DELAY && reading != button_state) {
-        button_state = reading;
+    // Runs on button state change except for when button_state is unstable.
+    // We don't want prev_button_state to be UNSTABLE because if button_state transitions from HIGH->UNSTABLE->HIGH, we don't want to increment current_mode.
+    if (prev_button_state != button_state && button_state != UNSTABLE) {
+        prev_button_state = button_state;
 
         if (button_state == HIGH) {
-            current_mode = current_mode >= num_modes ? 0 : current_mode + 1;
+            set_current_mode(current_mode >= num_modes ? 0 : current_mode + 1);
+            holding_start_time = millis();
         }
 
         if (current_mode == 0 && button_state == LOW) {
