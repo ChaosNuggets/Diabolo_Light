@@ -7,8 +7,7 @@ using namespace Diabolo_Light;
 const unsigned int BUTTON_PIN = 2;
 const unsigned int MOSFET_PIN = 0;
 
-// HIGH means the button is pressed, LOW means the button is released, and
-// UNSTABLE means the button hasn't been held down / let go for long enough
+// HIGH means the button is pressed, and LOW means the button is released
 static volatile int prev_button_state;
 static volatile int button_state;
 
@@ -18,15 +17,17 @@ static volatile uint8_t button_history;
 static unsigned int num_modes;
 static unsigned int current_mode; // 0 is the off mode, 1-num_modes inclusive are user defined modes
 
+// All time variables have units of ms
 static void (*on_wake_up)();
-static unsigned long wake_up_time;
-static unsigned long holding_start_time; // The time at which the user starts holding the button
+static volatile unsigned long wake_up_time;
+static volatile unsigned long holding_start_time; // The time at which the user starts holding the button
 
 // "Constants" initialized in begin() that specify the time the user has to hold the button to turn the lights on/off.
 static unsigned int time_to_turn_on;
 static unsigned int time_to_turn_off;
 
-static bool has_just_woken_up; // If this is true, the user needs to hold the button for the mode to increment to 1
+// If this is true, the user needs to hold the button for time_to_turn_on ms for the mode to increment to 1
+static volatile bool has_just_woken_up;
 
 /*!
     @brief   Shut down the ATtiny85 and disconnect the LEDs to save power
@@ -47,9 +48,16 @@ static void shut_down() {
              board back on.
 */
 ISR(PCINT0_vect) {
-    last_debounce_time = millis();
     wake_up_time = millis();
+
+    // Set both to HIGH because specific actions only occur when button_state changes,
+    // and we want to do "nothing" if button_state is high, and shut down the board if button_state is low.
+    // Yes we want to connect the LEDs when the button is held for enough time, but that's handled in a
+    // separate block of code.
+    prev_button_state = HIGH;
     button_state = HIGH;
+
+    holding_start_time = millis();
     has_just_woken_up = true;
 
     PCMSK &= ~(1 << PCINT2); // turns off PCINT2 as interrupt pin
@@ -98,44 +106,38 @@ void Diabolo_Light::begin(const unsigned int num_modes, const unsigned int hold_
     ADCSRA &= ~(1 << ADEN); // Disable ADC
     ACSR &= ~(1 << ACIE); // Disable analog comparator interrupt
     ACSR |= 1 << ACD; // Disable analog comparator
-    
-    button_interrupt_setup();
+
+    // Set both to HIGH because actions only occur when prev_button_state != button_state,
+    // and we want to do nothing if button_state is high, and shut down the board if button_state is low.
+    prev_button_state = HIGH; 
+    button_state = HIGH;
+
+    has_just_woken_up = false; // Set it to false because we want the board to sleep right away
 
     pinMode(BUTTON_PIN, INPUT);
-    prev_button_state = UNSTABLE;
-    button_state = UNSTABLE; // Set it to UNSTABLE because we don't know whether the button is currently pressed or not
-    has_just_woken_up = false; // Set it to false because we want the board to sleep right away
+    button_interrupt_setup();
 
     pinMode(MOSFET_PIN, OUTPUT);
     set_current_mode(0); // Set the board to shut down
 }
 
 /*!
-    @brief   Legacy function that used to read button input and change
-             current_mode if necessary. Now this function does nothing. It's
-             just here so code using previous versions of this library doesn't break.
-*/
-void Diabolo_Light::handle_button() {}
-
-/*!
     @brief   Read button input and change current_mode if necessary.
-             Runs once every 5ms.
+             Call this at the start of your loop function. Make sure
+             your code is non blocking or else current_mode won't update.
 */
-ISR(TIMER0_COMPA_vect) {
+void Diabolo_Light::handle_button() {
+    // TODO: make this run once every 5 ms or go back to the old debounding method (probably better)
     // Read button state and shift a bit into the button history
     button_history = (button_history<<1) | digitalRead(BUTTON_PIN);
 
     // If all ones, button state = HIGH,
     // If all zeros, button state = LOW,
-    // Otherwise button state = UNSTABLE
+    // Otherwise button state is unstable and don't change it
     if (~button_history == 0x0) {
         button_state = HIGH;
     } else if (button_history == 0x0) {
         button_state = LOW;
-    } else {
-        button_state = UNSTABLE;
-        // Reset holding_start_time so it basically acts like the button has been held for 0 time
-        holding_start_time = millis(); 
     }
 
     // Connect the LEDs if the user has held down the button for long enough
@@ -145,14 +147,13 @@ ISR(TIMER0_COMPA_vect) {
         digitalWrite(MOSFET_PIN, LOW); // Connect the LEDs
     }
     
-    // Ty Victor Lin for this ideaa (shut down on long press)
+    // Ty Victor Lin for this idea (shut down on long press)
     if (button_state == HIGH && millis() - holding_start_time >= time_to_turn_off) {
         set_current_mode(0);
     }
 
-    // Runs on button state change except for when button_state is unstable.
-    // We don't want prev_button_state to be UNSTABLE because if button_state transitions from HIGH->UNSTABLE->HIGH, we don't want to increment current_mode.
-    if (prev_button_state != button_state && button_state != UNSTABLE) {
+    // Runs on button state change
+    if (prev_button_state != button_state) {
         prev_button_state = button_state;
 
         if (button_state == HIGH) {
@@ -208,3 +209,4 @@ unsigned long Diabolo_Light::awake_time() {
 int Diabolo_Light::get_button_state() {
     return button_state;
 }
+
