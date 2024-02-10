@@ -118,7 +118,7 @@ void Diabolo_Light::handle_button() {
 
         if (button_state == HIGH) {
             holding_start_time = millis();
-            current_mode = current_mode >= num_modes ? 0 : current_mode + 1;
+            set_current_mode(current_mode >= num_modes ? 0 : current_mode + 1);
         }
 
         if (current_mode == 0 && button_state == LOW) {
