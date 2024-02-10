@@ -4,11 +4,11 @@
 
 using namespace Diabolo_Light;
 
-const unsigned int BUTTON_PIN = 2;
-const unsigned int MOSFET_PIN = 0;
+const static unsigned int BUTTON_PIN = 2
+const static unsigned int MOSFET_PIN = 0
 
 // All time variables in this file have units of ms
-const static unsigned int DEBOUNCE_DELAY = 50; // the time the button has to be stable before button_state updates
+const static unsigned long DEBOUNCE_DELAY = 50 // the time the button has to be stable before button_state updates
 static unsigned long last_debounce_time; // the most recent time that the button was unstable
 static int prev_reading; // the previous result of digitalRead(BUTTON_PIN)
 
