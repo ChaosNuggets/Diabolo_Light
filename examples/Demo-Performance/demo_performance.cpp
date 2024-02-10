@@ -37,7 +37,10 @@ struct Instruction {
 };
 
 static unsigned int instruction_num = 0; // Stores which instruction we are currently on in the instructions array
-static Instruction instructions[] = { // A list of colors that the lights follow in order
+// A list of colors that the lights follow in order. Note that for bigger
+// programs, it's better to use a big switch statement instead of a big array
+// to save RAM. Weird stuff can happen at about 330 bytes of RAM usage.
+static Instruction instructions[] = { 
     Instruction(WHITE, BLUE, 0),
     Instruction(BRIGHT_WHITE, BLUE, 4),
     Instruction(OFF, 5),

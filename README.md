@@ -33,14 +33,15 @@ Adafruit_Neopixel pixels(LED_PIN, NUM_LEDS, LED_TYPE);
 
 ## Functions
 
-### `void Diabolo_Light::begin(const unsigned int num_modes, const unsigned int hold_time = 500, void (*on_wake_up)() = [](){})`
+### `void Diabolo_Light::begin(const unsigned int num_modes, const unsigned long time_to_turn_on = 500, void (*on_wake_up)() = [](){}, const unsigned long time_to_turn_off = 2000)`
 
 Configures the diabolo light to read button input and save power. This function should be called in the setup function.
 
 - **Parameters:**
   - `num_modes`: The number of user-defined modes (excluding the off mode).
-  - `hold_time`: How long the user has to hold the button for in order for the board to turn on. Defaults to 500ms.
+  - `time_to_turn_on`: How long the user has to hold the button for in order for the board to turn on. Defaults to 500ms.
   - `on_wake_up`: An optional callback function to be executed when the board wakes up from sleep mode. Defaults to doing nothing.
+  - `time_to_turn_off`: How long the user has to hold the button for in order for the board to turn off. Defaults to 2000ms.
 
 ### `void Diabolo_Light::handle_button()`
 
