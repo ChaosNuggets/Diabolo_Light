@@ -50,12 +50,13 @@ static void shut_down() {
 ISR(PCINT0_vect) {
     wake_up_time = millis();
     holding_start_time = millis();
-    has_just_woken_up = true;
     // Set button_state to HIGH because specific actions only occur when button_state changes, and we want to
     // do "nothing" if button_state changes to high, and shut down the board if button_state changes to low.
     // Yes we want to connect the LEDs when the button is held for enough time, but that's handled in a
     // separate block of code.
     button_state = HIGH;
+    last_debounce_time = millis(); // Set this to the current time to allow the button to debounce if it is currently unstable.
+    has_just_woken_up = true; // Set it to true because we want to enable the hold to turn on feature
 
     cli(); // disable interrupts
     PCMSK &= ~(1 << PCINT2); // turns off PCINT2 as interrupt pin
