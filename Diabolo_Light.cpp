@@ -20,7 +20,7 @@ static unsigned int current_mode; // 0 is the off mode, 1-num_modes inclusive ar
 
 static void (*on_wake_up)();
 static volatile unsigned long wake_up_time;
-static volatile unsigned long holding_start_time; // The time at which the user starts holding the button
+static volatile unsigned long last_press_time; // The time at which the user last pressed the button
 
 // "Constants" initialized in begin() that specify the time the user has to hold the button to turn the lights on/off.
 static unsigned long time_to_turn_on;
@@ -37,7 +37,7 @@ static void shut_down() {
     GIMSK |= 1 << PCIE; // enable pin change interrupt
     PCMSK |= 1 << PCINT2; // turns on PCINT2 as interrupt pin
     set_sleep_mode(SLEEP_MODE_PWR_DOWN);
-    sleep_enable(); //set sleep enable bit
+    sleep_enable(); // set sleep enable bit
     sei(); // enable interrupts
     sleep_mode(); // put the microcontroller to sleep
 }
@@ -49,7 +49,7 @@ static void shut_down() {
 */
 ISR(PCINT0_vect) {
     wake_up_time = millis();
-    holding_start_time = millis();
+    last_press_time = millis();
     // Set button_state to HIGH because specific actions only occur when button_state changes, and we want to
     // do "nothing" if button_state changes to high, and shut down the board if button_state changes to low.
     // Yes we want to connect the LEDs when the button is held for enough time, but that's handled in a
@@ -118,7 +118,7 @@ void Diabolo_Light::handle_button() {
         button_state = reading;
 
         if (button_state == HIGH) {
-            holding_start_time = millis();
+            last_press_time = millis();
             set_current_mode(current_mode >= num_modes ? 0 : current_mode + 1);
         }
 
@@ -128,14 +128,14 @@ void Diabolo_Light::handle_button() {
     }
 
     // Connect the LEDs if the user has held down the button for long enough
-    if (has_just_woken_up && button_state == HIGH && millis() - holding_start_time >= time_to_turn_on) {
+    if (has_just_woken_up && button_state == HIGH && millis() - last_press_time >= time_to_turn_on) {
         has_just_woken_up = false;
         set_current_mode(current_mode >= num_modes ? 0 : current_mode + 1);
         digitalWrite(MOSFET_PIN, LOW); // Connect the LEDs
     }
     
     // Ty Victor Lin for this idea (shut down on long press)
-    if (button_state == HIGH && millis() - holding_start_time >= time_to_turn_off) {
+    if (button_state == HIGH && millis() - last_press_time >= time_to_turn_off) {
         set_current_mode(0);
     }
 }
