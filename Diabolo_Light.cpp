@@ -4,11 +4,11 @@
 
 using namespace Diabolo_Light;
 
-const static unsigned int BUTTON_PIN = 2;
-const static unsigned int MOSFET_PIN = 0;
+#define BUTTON_PIN 2
+#define MOSFET_PIN 0
 
 // All time variables in this file have units of ms
-const static unsigned long DEBOUNCE_DELAY = 50; // the time the button has to be stable before button_state updates
+#define DEBOUNCE_DELAY 25 // the time the button has to be stable before button_state updates
 static unsigned long last_debounce_time; // the most recent time that the button was unstable
 static int prev_reading; // the previous result of digitalRead(BUTTON_PIN)
 
@@ -58,7 +58,6 @@ ISR(PCINT0_vect) {
     last_debounce_time = millis(); // Set this to the current time to allow the button to debounce if it is currently unstable.
     has_just_woken_up = true; // Set it to true because we want to enable the hold to turn on feature
 
-    cli(); // disable interrupts
     PCMSK &= ~(1 << PCINT2); // turns off PCINT2 as interrupt pin
     sleep_disable(); // clear sleep enable bit
 
